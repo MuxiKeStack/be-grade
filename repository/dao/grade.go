@@ -84,6 +84,8 @@ func (dao *GORMGradeDAO) UpsertGrades(ctx context.Context, grades []Grade) error
 		var eg errgroup.Group
 		for _, g := range grades {
 			eg.Go(func() error {
+				g.Ctime = now
+				g.Utime = now
 				return tx.Clauses(
 					clause.OnConflict{DoUpdates: clause.Assignments(map[string]any{
 						"utime": now,
