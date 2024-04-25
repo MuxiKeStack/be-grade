@@ -7,9 +7,9 @@
 package main
 
 import (
+	"github.com/MuxiKeStack/be-grade/events"
 	"github.com/MuxiKeStack/be-grade/grpc"
 	"github.com/MuxiKeStack/be-grade/ioc"
-	"github.com/MuxiKeStack/be-grade/pkg/grpcx"
 	"github.com/MuxiKeStack/be-grade/repository"
 	"github.com/MuxiKeStack/be-grade/repository/dao"
 	"github.com/MuxiKeStack/be-grade/service"
@@ -17,7 +17,7 @@ import (
 
 // Injectors from wire.go:
 
-func InitGRPCServer() grpcx.Server {
+func InitApp() *App {
 	logger := ioc.InitLogger()
 	db := ioc.InitDB(logger)
 	gradeDAO := dao.NewGORMGradeDAO(db)
@@ -28,5 +28,12 @@ func InitGRPCServer() grpcx.Server {
 	gradeService := service.NewGradeService(gradeRepository, ccnuServiceClient, courseServiceClient)
 	gradeServiceServer := grpc.NewGradeServiceServer(gradeService)
 	server := ioc.InitGRPCxKratosServer(gradeServiceServer, client, logger)
-	return server
+	saramaClient := ioc.InitKafka()
+	shareGradeEventConsumer := events.NewShareGradeEventConsumer(saramaClient, logger, gradeService)
+	v := ioc.InitConsumers(shareGradeEventConsumer)
+	app := &App{
+		server:    server,
+		consumers: v,
+	}
+	return app
 }

@@ -1,17 +1,26 @@
 package main
 
 import (
+	"github.com/MuxiKeStack/be-grade/pkg/grpcx"
+	"github.com/MuxiKeStack/be-grade/pkg/saramax"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 func main() {
 	initViper()
-	server := InitGRPCServer()
-	err := server.Serve()
+	app := InitApp()
+	for _, c := range app.consumers {
+		err := c.Start()
+		if err != nil {
+			panic(err)
+		}
+	}
+	err := app.server.Serve()
 	if err != nil {
 		panic(err)
 	}
+
 }
 
 func initViper() {
@@ -24,4 +33,9 @@ func initViper() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+type App struct {
+	server    grpcx.Server
+	consumers []saramax.Consumer
 }
