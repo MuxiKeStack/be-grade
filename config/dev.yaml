@@ -1,0 +1,18 @@
+mysql:
+  dsn: "root:root@tcp(localhost:3306)/kstack"
+
+etcd:
+  endpoints:
+    - "localhost:12379"
+
+grpc:
+  server:
+    name: "grade"
+    weight: 100
+    addr: ":19092"
+    etcdTTL: 60
+  client:
+    ccnu:
+      endpoint: "discovery:///ccnu"
+    course:
+      endpoint: "discovery:///course"
