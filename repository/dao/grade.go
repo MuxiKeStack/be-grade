@@ -18,7 +18,7 @@ type GradeDAO interface {
 	GetGradesByCourseId(ctx context.Context, courseId int64) ([]Grade, error)
 	SignForGradeSharing(ctx context.Context, uid int64, wantsToSign bool) error
 	UpsertGrades(ctx context.Context, grades []Grade) error
-	GetGradeShareAgreements(ctx context.Context, uid int64) (GradeShareAgreements, error)
+	GetGradeShareAgreements(ctx context.Context, uid int64) (GradeShareAgreement, error)
 }
 
 type GORMGradeDAO struct {
@@ -29,8 +29,8 @@ func NewGORMGradeDAO(db *gorm.DB) GradeDAO {
 	return &GORMGradeDAO{db: db}
 }
 
-func (dao *GORMGradeDAO) GetGradeShareAgreements(ctx context.Context, uid int64) (GradeShareAgreements, error) {
-	var gs GradeShareAgreements
+func (dao *GORMGradeDAO) GetGradeShareAgreements(ctx context.Context, uid int64) (GradeShareAgreement, error) {
+	var gs GradeShareAgreement
 	err := dao.db.WithContext(ctx).
 		Where("uid = ?", uid).
 		First(&gs).Error
@@ -47,7 +47,7 @@ func (dao *GORMGradeDAO) GetGradesByCourseId(ctx context.Context, courseId int64
 
 func (dao *GORMGradeDAO) SignForGradeSharing(ctx context.Context, uid int64, wantsToSign bool) error {
 	return dao.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var gs GradeShareAgreements
+		var gs GradeShareAgreement
 		err := tx.Where("uid = ?", uid).First(&gs).Error
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return err
@@ -59,7 +59,7 @@ func (dao *GORMGradeDAO) SignForGradeSharing(ctx context.Context, uid int64, wan
 				return ErrRepeatSignOperation
 			}
 			// 因为是检查，然后做某事，肯定有并发问题，但这里有问题!=有影响，况且一个用自己能有多少并发
-			return tx.Model(&GradeShareAgreements{}).
+			return tx.Model(&GradeShareAgreement{}).
 				Where("uid = ?", uid).
 				Updates(map[string]any{
 					"utime":     now,
@@ -109,7 +109,7 @@ type Grade struct {
 	Ctime    int64
 }
 
-type GradeShareAgreements struct {
+type GradeShareAgreement struct {
 	Id       int64 `gorm:"primaryKey,autoIncrement"`
 	Uid      int64 `gorm:"uniqueIndex"`
 	IsSigned bool
