@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"github.com/MuxiKeStack/be-grade/domain"
+	// repository/dao 这部分不区分大小写
 	"github.com/MuxiKeStack/be-grade/repository/dao"
 	"github.com/ecodeclub/ekit/slice"
 )
